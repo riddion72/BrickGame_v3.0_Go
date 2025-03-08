@@ -1,0 +1,59 @@
+html {
+    min-height: 100vh;
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#tetris {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    position: relative;
+}
+
+#game-board {
+    display: flex; /* Измените на grid */
+    flex-wrap: wrap;
+    grid-template-columns: repeat(10, 1fr); /* Явно укажите количество колонок */
+    gap: var(--game-board-gap);
+    background: var(--game-board-background);
+    padding: var(--game-board-gap);
+    width: calc(
+        (var(--tile-size) + var(--game-board-gap)) * var(--game-board-width) -
+            var(--game-board-gap)
+    );
+}
+
+.tile {
+    width: var(--tile-size);
+    height: var(--tile-size);
+    background: var(--tile-color);
+    aspect-ratio: 1/1; /* Добавьте это для квадратных тайлов */
+}
+
+.next-field {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--game-board-gap);
+    background: var(--game-board-background);
+    padding: var(--game-board-gap);
+    width: calc(
+        (var(--tile-size) + var(--game-board-gap)) * 5 - 
+        var(--game-board-gap)
+    );
+}
+.active {
+    background: var(--tile-active-color);
+}
+.dashboard-text {
+    font-size: 2rem;
+}
+#side-panel {
+    margin-left: 20px;
+}

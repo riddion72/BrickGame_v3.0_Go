@@ -1,0 +1,138 @@
+package main
+
+import (
+	"bufio"
+	"os"
+	"strconv"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
+
+// Mocking the GameInfo_t structure for testing
+type MockGameInfo struct {
+	mock.Mock
+}
+
+func (m *MockGameInfo) Init() {
+	m.Called()
+}
+
+func TestInitRace(t *testing.T) {
+	InitRace()
+	assert.NotNil(t, Game, "Game should be initialized")
+	assert.Equal(t, StatusSTART, State, "State should be StatusSTART")
+	assert.Equal(t, int8(0), CarPos, "CarPos should be initialized to 0")
+	exitGame()
+}
+
+func TestUserInputStart(t *testing.T) {
+	InitRace()
+	UserInput(0, 0)
+	assert.Equal(t, StatusMOVE, State, "State should change to StatusMOVE after starting")
+	exitGame()
+}
+
+func TestUserInputTerminate(t *testing.T) {
+	InitRace()
+	UserInput(2, 0)
+	assert.Equal(t, StatusEND, State, "State should change to StatusEND after termination")
+	exitGame()
+}
+
+func TestForward(t *testing.T) {
+	InitRace()
+	start()
+	Game.speed = DEFAULT_SPEED
+	TakeHold = true
+	forward()
+	assert.Equal(t, 6, Game.speed, "Speed should be halved and incremented by 1")
+	exitGame()
+}
+
+func TestTurnLeft(t *testing.T) {
+	InitRace()
+	start()
+	CarPos = 0
+	UserInput(3, 0)
+	assert.Equal(t, 0, CarPos, "CarPos should be shifted left")
+	exitGame()
+}
+
+func TestTurnRight(t *testing.T) {
+	InitRace()
+	start()
+	CarPos = 0
+	UserInput(4, 0)
+	assert.Equal(t, 1, CarPos, "CarPos should be shifted right")
+	exitGame()
+}
+
+// func TestNextStep(t *testing.T) {
+// 	InitRace()
+// 	Game.field = (**C.int)(C.calloc(C.H_SIZE, C.size_t(unsafe.Sizeof((*C.int)(nil)))))
+// 	nextStep()
+// 	assert.NotNil(t, Game.field, "Game field should not be nil after next step")
+// }
+
+func TestPause(t *testing.T) {
+	InitRace()
+	start()
+	Game.pause = 0
+	pause()
+	assert.Equal(t, 1, Game.pause, "Game should be paused")
+	pause()
+	assert.Equal(t, 0, Game.pause, "Game should resume")
+	exitGame()
+}
+
+func TestLoadScore(t *testing.T) {
+	// Create a temporary score file for testing
+	scoreFile, err := os.Create(SCORE_FILE_RACE)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(SCORE_FILE_RACE)
+
+	_, err = scoreFile.WriteString("100\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	scoreFile.Close()
+
+	InitRace()
+	loadScore()
+	assert.Equal(t, 100, Game.high_score, "High score should be loaded from file")
+	exitGame()
+}
+
+func TestSaveRecord(t *testing.T) {
+	InitRace()
+	Game.high_score = 200
+	saveRecord()
+
+	// Verify that the score was saved correctly
+	file, err := os.Open(SCORE_FILE_RACE)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Scan()
+	score, err := strconv.Atoi(scanner.Text())
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, 200, score, "High score should be saved to file")
+	exitGame()
+}
+
+func TestFreeGameInfo(t *testing.T) {
+	InitRace()
+	FreeGameInfo()
+	assert.Nil(t, Game.field, "Game field should be nil after freeing")
+	assert.Nil(t, Game.next, "Game next should be nil after freeing")
+	exitGame()
+}
